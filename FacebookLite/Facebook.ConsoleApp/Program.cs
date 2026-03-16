@@ -1,125 +1,122 @@
-﻿using Facebook.Core.FBUsers;
+using Facebook.Core.FBUsers;
 using Facebook.Core.FBPosts;
 using Facebook.Core.FBComments;
 using Facebook.Core.FBRepos;
 using Facebook.Core.FBServices;
 
-namespace Facebook.ConsoleApp;
+namespace Facebook.ConsoleApp; //san uusgej baina 
 
-class Program
+class Program //console appiin undsen class
 {
     static void Main(string[] args)
     {
-        
-        Console.WriteLine("        FACEBOOK LITE          \n");
-
-        /** 1. Репозитор болон сервис үүсгэх
-         * 2. Хэрэглэгчид үүсгэх
-         * 3. Пост үүсгэх
-         * 4. Like дарах
-         * 5. Коммент нэмэх
-         * 6. Комментод like дарах
-         * 7. Пост түгээх
-         * 8. Бүх постыг харуулах
-         * 9. Facebook Story тест
-         * 10. Статистик
-         * 11. Дүгнэлт
-         */
-
-        var postRepo = new FB_MemoryRepo<FB_Post>();
+        Console.WriteLine("FACEBOOK LITE");
+         
+        var postRepo = new FB_MemoryRepo<FB_Post>(); //postuudiig hadgalah dan uusgej baina tur sanah oid ugugdul hadgaldag repository
         var postService = new FB_PostService(postRepo);
-
-        //hereglegchid uusgej baina
-        Console.WriteLine("\n👥 Хэрэглэгчид үүсгэж байна...");
 
         var bold = new FB_StoryUser("Bold", "bold@facebook.com", 25);
         var tuya = new FB_StoryUser("Tuya", "tuya@facebook.com", 24);
         var bat = new FB_StoryUser("Bat", "bat@facebook.com", 30);
-        var baldan = new FB_StoryUser("Baldan", "baldan@facebook.com", 40);
 
-        Console.WriteLine($"✅ {bold.UserName} (Нас: {bold.UserAge}) - ID: {bold.UserId.Substring(0, 8)}...");
-        Console.WriteLine($"✅ {tuya.UserName} (Нас: {tuya.UserAge})");
-        Console.WriteLine($"✅ {bat.UserName} (Нас: {bat.UserAge})");
-        Console.WriteLine($"✅ {baldan.UserName} (Нас: {baldan.UserAge})");
+        var users = new List<FB_StoryUser> { bold, tuya, bat };
 
-        //post uusgej baina
-        Console.WriteLine("\n📝 Пост нэмж байна...");
+        Console.WriteLine("Users: Bold, Tuya, Bat");
+        Console.WriteLine("Commands:");
+        Console.WriteLine("addpost username \"text\"");
+        Console.WriteLine("like postId username");
+        Console.WriteLine("comment postId username \"text\"");
+        Console.WriteLine("show");
+        Console.WriteLine("exit");
 
-        var post1 = postService.CreatePost(bold, "Сайн уу? Энэ миний Facebook дээрх анхны пост!");
-        var post2 = postService.CreatePhotoPost(tuya, "Өнөөдөр гэр бүлээрээ зураг авхууллаа", "family_photo.jpg");
-        var post3 = postService.CreatePost(bat, "Програмчлал сурах хамгийн сайхан арга - практик дээр турших!");
-        var post4 = postService.CreatePost(baldan, "Програмчлал сурах хамгийн сайхан арга - практик дээр турших!");
-        //like darj baina
-        Console.WriteLine("\n❤️ Like дарж байна...");
+        while (true) //user exit bichih hurtel ajillana 
+        {
+            Console.Write("\n> ");
+            var input = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(input)) continue;
 
-        postService.LikePost(post1.Id, tuya.UserId);
-        postService.LikePost(post1.Id, bat.UserId);
-        postService.LikePost(post2.Id, bold.UserId);
-        postService.LikePost(post2.Id, bat.UserId);
-        postService.LikePost(post3.Id, bold.UserId);
-        postService.LikePost(post3.Id, tuya.UserId);
-        postService.LikePost(post3.Id, baldan.UserId);
-        postService.LikePost(post4.Id, baldan.UserId);
-        postService.LikePost(post4.Id, bold.UserId);
+            if (input.ToLower() == "exit")
+                break;
 
-        //comment nemj baina
-        Console.WriteLine("\n💬 Коммент нэмж байна...");
+            var parts = input.Split(' '); //user input zadlana
 
-        var comment1 = new FB_Comment(tuya, "Тавтай морил Bold аа! Facebook-д тавтай морил! 👋");
-        postService.AddComment(post1.Id, comment1);
+            try
+            {
+                switch (parts[0].ToLower())
+                {
+                    case "addpost":
+                        {
+                            var username = parts[1];
+                            var text = input.Substring(input.IndexOf('"') + 1);
+                            text = text.Substring(0, text.LastIndexOf('"'));
 
-        var comment2 = new FB_Comment(bold, "Баярлалаа Tuya! 🌞");
-        postService.AddComment(post1.Id, comment2);
+                            var user = users.FirstOrDefault(u => u.UserName.Equals(username, StringComparison.OrdinalIgnoreCase));
+                            if (user == null)
+                            {
+                                Console.WriteLine("User not found.");
+                                break;
+                            }
 
-        var comment3 = new FB_Comment(bat, "Гоё зураг авчээ! 📸");
-        postService.AddComment(post2.Id, comment3);
+                            var post = postService.CreatePost(user, text);
+                            Console.WriteLine($"Post created. ID: {post.Id}");
+                            break;
+                        }
 
-        var comment4 = new FB_Comment(tuya, "Bat аа, чиний зөв! 👨‍💻");
-        postService.AddComment(post3.Id, comment4);
+                    case "like":
+                        {
+                            var postId = parts[1];
+                            var username = parts[2];
 
-        //commented like darj baina
-        Console.WriteLine("\n❤️ Комментод like дарж байна...");
+                            var user = users.FirstOrDefault(u => u.UserName.Equals(username, StringComparison.OrdinalIgnoreCase));
+                            if (user == null)
+                            {
+                                Console.WriteLine("User not found.");
+                                break;
+                            }
 
-        comment1.AddLike(bat.UserId);
-        comment1.AddLike(bold.UserId);
-        comment3.AddLike(tuya.UserId);
-        comment3.AddLike(bold.UserId);
+                            postService.LikePost(postId, user.UserId);
+                            Console.WriteLine("Post liked.");
+                            break;
+                        }
 
-        //post tugeej baina
-        Console.WriteLine("\n🔄 Пост түгээж байна...");
+                    case "comment":
+                        {
+                            var postId = parts[1];
+                            var username = parts[2];
 
-        post1.SharePost(tuya.UserId);
-        post1.SharePost(bat.UserId);
-        post2.SharePost(bold.UserId);
-        post3.SharePost(tuya.UserId);
+                            var text = input.Substring(input.IndexOf('"') + 1);
+                            text = text.Substring(0, text.LastIndexOf('"'));
 
-        //buh postiig haruulna
-        postService.ShowAllPosts();
+                            var user = users.FirstOrDefault(u => u.UserName.Equals(username, StringComparison.OrdinalIgnoreCase));
+                            if (user == null)
+                            {
+                                Console.WriteLine("User not found.");
+                                break;
+                            }
 
-        //facebook story test
-        Console.WriteLine("\n=== 📱 FACEBOOK STORY ТЕСТ ===");
+                            var comment = new FB_Comment(user, text);
+                            postService.AddComment(postId, comment);
+                            Console.WriteLine("Comment added.");
+                            break;
+                        }
 
-        var storyUser = new FB_StoryUser("Saraa", "saraa@facebook.com", 22);
-        var story1 = storyUser.AddStory("Өнөөдрийн мөч... #facebookstory");
-        var story2 = storyUser.AddStory("Хөгжилтэй байна 🤪");
+                    case "show":
+                        {
+                            postService.ShowAllPosts();
+                            break;
+                        }
 
-        Console.WriteLine(story1);
-        Console.WriteLine(story2);
+                    default:
+                        Console.WriteLine("Unknown command.");
+                        break;
+                }
+            }
+            catch
+            {
+                Console.WriteLine("Invalid command format.");
+            }
+        }
 
-        var activeStories = storyUser.GetActiveStories();
-        Console.WriteLine($"Идэвхтэй story-нуудын тоо: {activeStories.Count}");
-
-        //statistic
-        Console.WriteLine("\n=== 📊 СТАТИСТИК ===");
-        Console.WriteLine($"Нийт пост: {postService.GetPostCount()}");
-        Console.WriteLine($"Нийт хэрэглэгч: 4 (Bold, Tuya, Bat, Saraa)");
-        Console.WriteLine($"Нийт коммент: 4");
-        Console.WriteLine($"Нийт like: {comment1.LikeCount + comment3.LikeCount + post1.LikeCount + post2.LikeCount + post3.LikeCount}");
-
-        //dugnelt
-        Console.WriteLine("\n FACEBOOK LITE АМЖИЛТТАЙ АЖИЛЛАЖ ДУУСЛАА! ");
-        
-        Console.WriteLine("\nEnter дарж гарна уу.");
-        Console.ReadLine();
+        Console.WriteLine("Program ended.");
     }
 }
